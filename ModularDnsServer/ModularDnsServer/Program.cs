@@ -1,3 +1,5 @@
 ﻿
 
-new ModularDnsServer.Core.Server().Run();
+using ModularDnsServer.Core;
+
+new Server().Run();
