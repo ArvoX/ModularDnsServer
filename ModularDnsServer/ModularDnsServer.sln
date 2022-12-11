@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33122.133
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModularDnsServer", "ModularDnsServer\ModularDnsServer.csproj", "{56C2E253-7566-4F15-831E-C3204C885775}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModularDnsServer.Core", "ModularDnsServer.Core\ModularDnsServer.Core.csproj", "{6F2D8E81-EB4A-453F-B3FE-29A27C4DAF9D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{56C2E253-7566-4F15-831E-C3204C885775}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56C2E253-7566-4F15-831E-C3204C885775}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56C2E253-7566-4F15-831E-C3204C885775}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56C2E253-7566-4F15-831E-C3204C885775}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F2D8E81-EB4A-453F-B3FE-29A27C4DAF9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F2D8E81-EB4A-453F-B3FE-29A27C4DAF9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F2D8E81-EB4A-453F-B3FE-29A27C4DAF9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F2D8E81-EB4A-453F-B3FE-29A27C4DAF9D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7120E7F2-0D4E-48AB-ACC6-D9764C8F1203}
+	EndGlobalSection
+EndGlobal
