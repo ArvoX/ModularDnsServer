@@ -25,9 +25,9 @@ public static class MessageParser
     for (int i = 0; i < questionsCount; i++)
     {
       string name = ParseLabel(buffer, ref index);
-      var qType = (QType)buffer.ToUInt16(++index);
+      var qType = (QType)buffer.ToUInt16(index);
       index += 2;
-      var qClass = (QClass)buffer.ToUInt16(++index);
+      var qClass = (QClass)buffer.ToUInt16(index);
       index += 2;
 
       questions[i] = new Question(name, qType, qClass);
