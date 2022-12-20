@@ -6,4 +6,7 @@ using System.Reflection.Emit;
 
 var udpClient = new UdpClient(53);
 while (true)
-  MessageParser.ParseMessage((await udpClient.ReceiveAsync()).Buffer);
+{
+  var message = MessageParser.ParseMessage((await udpClient.ReceiveAsync()).Buffer);
+  Console.WriteLine($"Incomming {message.Header.MessageType}: {message.Questions[0]}");
+}

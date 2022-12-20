@@ -2,9 +2,9 @@
 
 public static class BitReader
 {
-  public static ushort ToUInt16(this IList<byte> buffer, int offset)
+  public static ushort ToUInt16(this IList<byte> buffer, ref int offset)
   {
-    return buffer[offset].ToUInt16(buffer[offset + 1]);
+    return buffer[offset++].ToUInt16(buffer[offset++]);
   }
 
   public static ushort ToUInt16(this byte first, byte last)
@@ -12,9 +12,9 @@ public static class BitReader
     return (ushort)((first << 8) + last);
   }
 
-  public static uint ToUInt32(this IList<byte> buffer, int offset)
+  public static uint ToUInt32(this IList<byte> buffer, ref int offset)
   {
-    return buffer[offset].ToUInt32(buffer[offset + 1], buffer[offset + 2], buffer[offset + 3]);
+    return buffer[offset++].ToUInt32(buffer[offset++], buffer[offset++], buffer[offset++]);
   }
 
   public static uint ToUInt32(this byte first, byte second, byte third, byte last)
