@@ -1,6 +1,6 @@
 ﻿namespace ModularDnsServer.Core.Dns;
 
-public record struct Message(
+public  record class Message(
   Header Header,
   Question[] Questions,
   ResourceRecord[] Answers,

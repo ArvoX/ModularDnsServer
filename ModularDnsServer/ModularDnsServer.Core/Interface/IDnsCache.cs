@@ -4,6 +4,6 @@ namespace ModularDnsServer.Core.Interface;
 
 public interface IDnsCache
 {
-  public CacheResult CacheMessage(Guid id, Message message);
-  public ClearResult ClearMessage(Guid id);
+  //public CacheResult CacheMessage(Guid id, Message message);
+  //public ClearResult ClearMessage(Guid id);
 }

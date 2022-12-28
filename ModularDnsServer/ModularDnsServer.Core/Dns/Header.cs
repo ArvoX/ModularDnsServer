@@ -1,6 +1,6 @@
 ﻿namespace ModularDnsServer.Core.Dns;
 
-public record struct Header(
+public record class Header(
   ushort Id,
   MessageType MessageType,
   Opcode Opcode,
@@ -9,6 +9,7 @@ public record struct Header(
   bool RecursionDesired,
   bool RecursionAvailable,
   ResponseCode ResponseCode,
+  //TODO Abstract away (Just create arrays in the correct size)
   ushort QuestionsCount,
   ushort AnswersCount,
   ushort AuthorityCount,

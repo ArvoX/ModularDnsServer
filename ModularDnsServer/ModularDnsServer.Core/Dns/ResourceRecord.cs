@@ -1,7 +1,7 @@
 ﻿namespace ModularDnsServer.Core.Dns;
 
-public record struct ResourceRecord(
-  string Name,
+public record class ResourceRecord(
+  string Domain,
   Type Type,
   Class Class,
   uint TimeToLive,
