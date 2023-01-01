@@ -1,7 +1,6 @@
 ﻿using ModularDnsServer.Core.Dns;
 using ModularDnsServer.Core.Interface;
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Sockets;
 
 namespace ModularDnsServer.Core;
@@ -22,7 +21,7 @@ public class Server
     UdpClient = new UdpClient(configuration.UpdPort);
     TcpListener = new TcpListener(IPAddress.Any, configuration.TcpPort);
 
-    Cache= new DnsCache();
+    Cache = new DnsCache();
 
     PasiveResolvers = new List<IPasiveReslover>();
     ActiveResolvers = new List<IActiveResolver>();
@@ -45,21 +44,26 @@ public class Server
 
     TcpListener.Start();
     //TODO Handle result
+    //Messages sent over TCP connections use server port 53 (decimal).  The
+    //message is prefixed with a two byte length field which gives the message
+    //length, excluding the two byte length field.  This length field allows
+    //the low-level processing to assemble a complete message before beginning
+    //to parse it.
     await Task.WhenAny(TcpListener.AcceptTcpClientAsync(), UdpClient.ReceiveAsync());
   }
 
   public async Task<Message> HandleResultAsync(Message message)
   {
     var records = Cache.GetRecords(message);
-    if(records.Any()) 
+    if (records.Any())
       return Response(message, records);
 
     //TODO async?
-    return Combine(ActiveResolvers.Select(r => r.Resolv(message)));
+    return Combine(ActiveResolvers.Select(async r => await r.ResolvAsync(message)));
 
   }
 
-  private Message Combine(IEnumerable<Message> messages)
+  private Message Combine(IEnumerable<Task<Message>> messages)
   {
     throw new NotImplementedException();
   }

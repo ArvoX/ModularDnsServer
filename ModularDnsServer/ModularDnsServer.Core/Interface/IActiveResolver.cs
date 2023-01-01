@@ -4,5 +4,5 @@ namespace ModularDnsServer.Core.Interface;
 
 public interface IActiveResolver : IResolver
 {
-  public Message Resolv(Message message);
+  public Task<Message> ResolvAsync(Message message);
 }
