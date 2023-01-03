@@ -74,8 +74,7 @@ public class Server
     {
       Header = message.Header with
       {
-        MessageType = MessageType.Response,
-        AnswersCount = (ushort)records.Length
+        MessageType = MessageType.Response
       },
       Answers = records
     };

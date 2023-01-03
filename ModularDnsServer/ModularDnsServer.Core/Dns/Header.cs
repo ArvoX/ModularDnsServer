@@ -8,9 +8,4 @@ public record class Header(
   bool Truncation,
   bool RecursionDesired,
   bool RecursionAvailable,
-  ResponseCode ResponseCode,
-  //TODO Abstract away (Just create arrays in the correct size)
-  ushort QuestionsCount,
-  ushort AnswersCount,
-  ushort AuthorityCount,
-  ushort AdditionalRecordsCount);
+  ResponseCode ResponseCode);

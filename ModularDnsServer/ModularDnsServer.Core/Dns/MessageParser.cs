@@ -8,16 +8,16 @@ public static class MessageParser
 {
   public static Message ParseMessage(byte[] buffer)
   {
-    var header = ParseHeader(buffer, out int index);
-    var questions = ParseQuestions(buffer, ref index, header.QuestionsCount);
-    var answers = ParseResourceRecords(buffer, ref index, header.AnswersCount);
-    var authorities = ParseResourceRecords(buffer, ref index, header.AuthorityCount);
-    var additionalRecords = ParseResourceRecords(buffer, ref index, header.AdditionalRecordsCount);
+    var headerResult = ParseHeader(buffer, out int index);
+    var questions = ParseQuestions(buffer, ref index, headerResult.Questions);
+    var answers = ParseResourceRecords(buffer, ref index, headerResult.Answers);
+    var authorities = ParseResourceRecords(buffer, ref index, headerResult.Authorities);
+    var additionalRecords = ParseResourceRecords(buffer, ref index, headerResult.AdditionalRecords);
 
-    return new Message(header, questions, answers, authorities, additionalRecords);
+    return new Message(headerResult.Header, questions, answers, authorities, additionalRecords);
   }
 
-  public static Header ParseHeader(byte[] buffer, out int index)
+  public static HeaderResult ParseHeader(byte[] buffer, out int index)
   {
     index = 0;
     //Id use bytes?
@@ -36,7 +36,7 @@ public static class MessageParser
     var nsCount = buffer.ToUInt16(ref index);
     var arCount = buffer.ToUInt16(ref index);
 
-    return new Header(id, qr, opcode, aa, tc, rd, ra, rcode, qdCount, ancount, nsCount, arCount);
+    return new HeaderResult(new Header(id, qr, opcode, aa, tc, rd, ra, rcode), qdCount, ancount, nsCount, arCount);
   }
 
   public static Question[] ParseQuestions(byte[] buffer, ref int index, ushort questionsCount)
