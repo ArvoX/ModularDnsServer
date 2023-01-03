@@ -1,4 +1,4 @@
-﻿namespace ModularDnsServer.Core.Dns;
+﻿namespace ModularDnsServer.Core.Dns.Parser;
 
 public record struct HeaderResult(
   Header Header,
