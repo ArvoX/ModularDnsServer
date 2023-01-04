@@ -4,6 +4,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection.Emit;
 
-var conf = ServerConfiguration.DefautConfiguration;
+var conf = new ServerConfiguration();
 
-await new Server(conf).RunAsync();
+await new Server(conf).RunAsync(CancellationToken.None);

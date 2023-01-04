@@ -1,5 +1,6 @@
 ﻿using ModularDnsServer.Core.Dns;
 using ModularDnsServer.Core.Interface;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 
@@ -38,9 +39,11 @@ public class Server
 
   //public Server(params Func<ResolverConfiguration, IResolver>[] factories)
 
-  public async Task RunAsync()
+  public async Task RunAsync(CancellationToken cancellationToken)
   {
     await Task.WhenAll(PasiveResolvers.Select(async r => await r.InitCacheAsync(Cache)));
+    if (cancellationToken.IsCancellationRequested)
+      return;
 
     TcpListener.Start();
     //TODO Handle result
@@ -49,7 +52,43 @@ public class Server
     //length, excluding the two byte length field.  This length field allows
     //the low-level processing to assemble a complete message before beginning
     //to parse it.
-    await Task.WhenAny(TcpListener.AcceptTcpClientAsync(), UdpClient.ReceiveAsync());
+    BlockingCollection<Task> tasks = new();
+
+    await Task.WhenAll(
+    Task.Factory.StartNew(async () =>
+    {
+      while (!cancellationToken.IsCancellationRequested)
+      {
+        var client = await TcpListener.AcceptTcpClientAsync(cancellationToken);
+        tasks.Add(Task.Run(() => Handle(client), cancellationToken));
+      }
+    }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current),
+    Task.Factory.StartNew(async () =>
+    {
+      while (!cancellationToken.IsCancellationRequested)
+      {
+        var received = await UdpClient.ReceiveAsync();
+        tasks.Add(Task.Run(() => Handle(received), cancellationToken));
+      }
+    }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current),
+    Task.Factory.StartNew(async () =>
+      {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+          await tasks.Take(cancellationToken);
+        }
+      }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current)
+    );
+
+    await Task.WhenAll(tasks);
+  }
+
+  private void Handle(UdpReceiveResult received)
+  {
+  }
+
+  private void Handle(TcpClient client)
+  {;
   }
 
   public async Task<Message> HandleResultAsync(Message message)
