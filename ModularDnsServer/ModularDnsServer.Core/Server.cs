@@ -142,6 +142,6 @@ public class UdpMessageHandler
 
     using var client = new UdpClient();
     client.Connect(Client);
-    await client.SendAsync(buffer, CancellationToken)
+    await client.SendAsync(buffer, CancellationToken);
   }
 }

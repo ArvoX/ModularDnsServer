@@ -8,99 +8,99 @@ namespace ModularDnsServer.Core.Dns.Parser;
 
 public static class MessageParser
 {
-    public static Message ParseMessage(byte[] buffer)
-    {
-        var headerResult = ParseHeader(buffer, out int index);
-        var questions = ParseQuestions(buffer, ref index, headerResult.Questions);
-        var answers = ParseResourceRecords(buffer, ref index, headerResult.Answers);
-        var authorities = ParseResourceRecords(buffer, ref index, headerResult.Authorities);
-        var additionalRecords = ParseResourceRecords(buffer, ref index, headerResult.AdditionalRecords);
+  public static Message ParseMessage(byte[] buffer)
+  {
+    var headerResult = ParseHeader(buffer, out int index);
+    var questions = ParseQuestions(buffer, ref index, headerResult.Questions);
+    var answers = ParseResourceRecords(buffer, ref index, headerResult.Answers);
+    var authorities = ParseResourceRecords(buffer, ref index, headerResult.Authorities);
+    var additionalRecords = ParseResourceRecords(buffer, ref index, headerResult.AdditionalRecords);
 
-        return new Message(headerResult.Header, questions, answers, authorities, additionalRecords);
+    return new Message(headerResult.Header, questions, answers, authorities, additionalRecords);
+  }
+
+  public static HeaderResult ParseHeader(byte[] buffer, out int index)
+  {
+    index = 0;
+    //Id use bytes?
+    var id = buffer.ToUInt16(ref index);
+    var qr = (MessageType)((buffer[index] & 0b1000_0000) >> 7);
+    var opcode = (Opcode)((buffer[index] & 0b0111_1000) >> 3);
+    var aa = (buffer[index] & 0b0000_0100) > 0;
+    var tc = (buffer[index] & 0b0000_0010) > 0;
+    var rd = (buffer[index] & 0b0000_0001) > 0;
+    index++;
+    var ra = (buffer[index] & 0b1000_0000) > 0;
+    var rcode = (ResponseCode)(buffer[index] & 0b0000_1111);
+    index++;
+    var qdCount = buffer.ToUInt16(ref index);
+    var ancount = buffer.ToUInt16(ref index);
+    var nsCount = buffer.ToUInt16(ref index);
+    var arCount = buffer.ToUInt16(ref index);
+
+    return new HeaderResult(new Header(id, qr, opcode, aa, tc, rd, ra, rcode), qdCount, ancount, nsCount, arCount);
+  }
+
+  public static Question[] ParseQuestions(byte[] buffer, ref int index, ushort questionsCount)
+  {
+    var questions = new Question[questionsCount];
+
+    for (int i = 0; i < questionsCount; i++)
+    {
+      string name = ParseLabel(buffer, ref index);
+      var qType = (QType)buffer.ToUInt16(ref index);
+      var qClass = (QClass)buffer.ToUInt16(ref index);
+
+      questions[i] = new Question(name, qType, qClass);
     }
 
-    public static HeaderResult ParseHeader(byte[] buffer, out int index)
-    {
-        index = 0;
-        //Id use bytes?
-        var id = buffer.ToUInt16(ref index);
-        var qr = (MessageType)((buffer[index] & 0b1000_0000) >> 7);
-        var opcode = (Opcode)((buffer[index] & 0b0111_1000) >> 3);
-        var aa = (buffer[index] & 0b0000_0100) > 0;
-        var tc = (buffer[index] & 0b0000_0010) > 0;
-        var rd = (buffer[index] & 0b0000_0001) > 0;
-        index++;
-        var ra = (buffer[index] & 0b1000_0000) > 0;
-        var rcode = (ResponseCode)(buffer[index] & 0b0000_1111);
-        index++;
-        var qdCount = buffer.ToUInt16(ref index);
-        var ancount = buffer.ToUInt16(ref index);
-        var nsCount = buffer.ToUInt16(ref index);
-        var arCount = buffer.ToUInt16(ref index);
+    return questions;
+  }
 
-        return new HeaderResult(new Header(id, qr, opcode, aa, tc, rd, ra, rcode), qdCount, ancount, nsCount, arCount);
+  public static ResourceRecord[] ParseResourceRecords(byte[] buffer, ref int index, ushort count)
+  {
+    ResourceRecord[] records = new ResourceRecord[count];
+    for (int i = 0; i < count; i++)
+    {
+      var name = ParseLabel(buffer, ref index);
+      var type = (Type)buffer.ToUInt16(ref index);
+      var @class = (Class)buffer.ToUInt16(ref index);
+      var ttl = buffer.ToUInt32(ref index);
+      var rdlength = buffer.ToUInt16(ref index);
+      var rdata = new byte[rdlength];
+      Array.Copy(buffer, index, rdata, 0, rdlength);
+
+      index += rdlength;
+      records[i] = new ResourceRecord(name, type, @class, ttl, rdata);
     }
 
-    public static Question[] ParseQuestions(byte[] buffer, ref int index, ushort questionsCount)
+    return records;
+  }
+
+  public static string ParseLabel(byte[] buffer, ref int index)
+  {
+    var nameParts = new List<string>();
+    while (buffer[index] != 0)
     {
-        var questions = new Question[questionsCount];
-
-        for (int i = 0; i < questionsCount; i++)
-        {
-            string name = ParseLabel(buffer, ref index);
-            var qType = (QType)buffer.ToUInt16(ref index);
-            var qClass = (QClass)buffer.ToUInt16(ref index);
-
-            questions[i] = new Question(name, qType, qClass);
-        }
-
-        return questions;
+      if ((buffer[index] & 0b1100_0000) == 0b1100_0000)
+      {
+        int pointerIndex = buffer.ToUInt16(ref index) & 0b0011_1111_1111_1111;
+        string pointerValue = ParseLabel(buffer, ref pointerIndex);
+        nameParts.Add(pointerValue);
+        break;
+      }
+      else
+      {
+        var length = buffer[index++];
+        var part = Encoding.ASCII.GetString(buffer, index, length);
+        nameParts.Add(part);
+        index += length;
+      }
     }
 
-    public static ResourceRecord[] ParseResourceRecords(byte[] buffer, ref int index, ushort count)
-    {
-        ResourceRecord[] records = new ResourceRecord[count];
-        for (int i = 0; i < count; i++)
-        {
-            var name = ParseLabel(buffer, ref index);
-            var type = (Type)buffer.ToUInt16(ref index);
-            var @class = (Class)buffer.ToUInt16(ref index);
-            var ttl = buffer.ToUInt32(ref index);
-            var rdlength = buffer.ToUInt16(ref index);
-            var rdata = new byte[rdlength];
-            Array.Copy(buffer, index, rdata, 0, rdlength);
-
-            index += rdlength;
-            records[i] = new ResourceRecord(name, type, @class, ttl, rdata);
-        }
-
-        return records;
-    }
-
-    public static string ParseLabel(byte[] buffer, ref int index)
-    {
-        var nameParts = new List<string>();
-        while (buffer[index] != 0)
-        {
-            if ((buffer[index] & 0b1100_0000) == 0b1100_0000)
-            {
-                int pointerIndex = buffer.ToUInt16(ref index) & 0b0011_1111_1111_1111;
-                string pointerValue = ParseLabel(buffer, ref pointerIndex);
-                nameParts.Add(pointerValue);
-                break;
-            }
-            else
-            {
-                var length = buffer[index++];
-                var part = Encoding.ASCII.GetString(buffer, index, length);
-                nameParts.Add(part);
-                index += length;
-            }
-        }
-
-        index++;
-        return string.Join('.', nameParts);
-    }
+    index++;
+    return string.Join('.', nameParts);
+  }
 }
 
 
@@ -123,12 +123,15 @@ public class MessageSerializer
   {
     buffer.AddRange(header.Id.ToBytes());
     //buffer.Add((byte)header.MessageType);
-    var qr = (MessageType)((buffer[index] & 0b1000_0000) >> 7);
-    var opcode = (Opcode)((buffer[index] & 0b0111_1000) >> 3);
-    var aa = (buffer[index] & 0b0000_0100) > 0;
-    var tc = (buffer[index] & 0b0000_0010) > 0;
-    var rd = (buffer[index] & 0b0000_0001) > 0;
-    index++;
+    var flags = (byte)((byte)header.MessageType << 7 +
+      (byte)header.Opcode << 3);
+    if (header.AuthoritativeAnswer)
+      flags += 0b0000_0100;
+    if (header.Truncation)
+      flags += 0b0000_0010;
+    if (header.RecursionDesired)
+      flags += 0b0000_0001;
+    
     var ra = (buffer[index] & 0b1000_0000) > 0;
     var rcode = (ResponseCode)(buffer[index] & 0b0000_1111);
     index++;
