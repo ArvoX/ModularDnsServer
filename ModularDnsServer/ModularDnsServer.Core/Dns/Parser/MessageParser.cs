@@ -152,12 +152,15 @@ public class MessageSerializer
   {
     buffer.AddRange(header.Id.ToBytes());
     //buffer.Add((byte)header.MessageType);
-    var qr = (MessageType)((buffer[index] & 0b1000_0000) >> 7);
-    var opcode = (Opcode)((buffer[index] & 0b0111_1000) >> 3);
-    var aa = (buffer[index] & 0b0000_0100) > 0;
-    var tc = (buffer[index] & 0b0000_0010) > 0;
-    var rd = (buffer[index] & 0b0000_0001) > 0;
-    index++;
+    var flags = (byte)((byte)header.MessageType << 7 +
+      (byte)header.Opcode << 3);
+    if (header.AuthoritativeAnswer)
+      flags += 0b0000_0100;
+    if (header.Truncation)
+      flags += 0b0000_0010;
+    if (header.RecursionDesired)
+      flags += 0b0000_0001;
+    
     var ra = (buffer[index] & 0b1000_0000) > 0;
     var rcode = (ResponseCode)(buffer[index] & 0b0000_1111);
     index++;
