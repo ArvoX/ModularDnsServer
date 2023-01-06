@@ -1,4 +1,5 @@
 ﻿using ModularDnsServer.Core.Binary;
+using ModularDnsServer.Core.Dns.ResourceRecords;
 using System.ComponentModel;
 using System.Text;
 using System.Xml.Linq;
@@ -56,9 +57,9 @@ public static class MessageParser
     return questions;
   }
 
-  public static ResourceRecord[] ParseResourceRecords(byte[] buffer, ref int index, ushort count)
+  public static IResourceRecord[] ParseResourceRecords(byte[] buffer, ref int index, ushort count)
   {
-    ResourceRecord[] records = new ResourceRecord[count];
+    IResourceRecord[] records = new IResourceRecord[count];
     for (int i = 0; i < count; i++)
     {
       var name = ParseLabel(buffer, ref index);
@@ -66,14 +67,17 @@ public static class MessageParser
       var @class = (Class)buffer.ToUInt16(ref index);
       var ttl = buffer.ToUInt32(ref index);
       var rdlength = buffer.ToUInt16(ref index);
-      var rdata = type switch
+      records[i] = type switch
       {
-        Type.A => new A(buffer.ToUInt32(ref index)),
-        Type.NS => new NS(ParseLabel(buffer, ref index)),
-        Type.MD => new MD(ParseLabel(buffer, ref index)),
-        Type.MF => new MF(ParseLabel(buffer, ref index)),
-        Type.CName => new CName(ParseLabel(buffer, ref index)),
+        Type.A => new A(name, @class, ttl, buffer.ToUInt32(ref index)),
+        Type.NS => new NS(name, @class, ttl, ParseLabel(buffer, ref index)),
+        Type.MD => new MD(name, @class, ttl, ParseLabel(buffer, ref index)),
+        Type.MF => new MF(name, @class, ttl, ParseLabel(buffer, ref index)),
+        Type.CName => new CName(name, @class, ttl, ParseLabel(buffer, ref index)),
         Type.SOA => new SOA(
+          name,
+          @class,
+          ttl,
           ParseLabel(buffer, ref index),
           ParseLabel(buffer, ref index),
           buffer.ToUInt32(ref index),
@@ -81,21 +85,20 @@ public static class MessageParser
           TimeSpan.FromSeconds(buffer.ToInt32(ref index)),
           TimeSpan.FromSeconds(buffer.ToInt32(ref index)),
           buffer.ToUInt32(ref index)),
-        Type.MB => new MB(ParseLabel(buffer, ref index)),
-        Type.MG => new MG(ParseLabel(buffer, ref index)),
-        Type.MR => new MR(ParseLabel(buffer, ref index)),
-        Type.Null => new Null(buffer.ToArray(ref index, rdlength)),
-        Type.WKS => new WKS(buffer.ToUInt32(ref index), buffer[index++], buffer.ToArray(ref index, rdlength - 3)),
-        Type.PTR => new PTR(ParseLabel(buffer, ref index)),
-        Type.HInfo => new HInfo(buffer.ToString(ref index), buffer.ToString(ref index)),
-        Type.MInfo => new MInfo(buffer.ToString(ref index), buffer.ToString(ref index)),
-        Type.MX => new MX(buffer.ToInt16, buffer.ToString(ref index)),
-        Type.TXT => new TXT(buffer.ToStrings(ref index, rdlength)),
+        Type.MB => new MB(name, @class, ttl, ParseLabel(buffer, ref index)),
+        Type.MG => new MG(name, @class, ttl, ParseLabel(buffer, ref index)),
+        Type.MR => new MR(name, @class, ttl, ParseLabel(buffer, ref index)),
+        Type.Null => new Null(name, @class, ttl, buffer.ToArray(ref index, rdlength)),
+        Type.WKS => new WKS(name, @class, ttl, buffer.ToUInt32(ref index), buffer[index++], buffer.ToArray(ref index, rdlength - 3)),
+        Type.PTR => new PTR(name, @class, ttl, ParseLabel(buffer, ref index)),
+        Type.HInfo => new HInfo(name, @class, ttl, buffer.ToString(ref index), buffer.ToString(ref index)),
+        Type.MInfo => new MInfo(name, @class, ttl, buffer.ToString(ref index), buffer.ToString(ref index)),
+        Type.MX => new MX(name, @class, ttl, buffer.ToInt16(ref index), buffer.ToString(ref index)),
+        Type.TXT => new TXT(name, @class, ttl, buffer.ToStrings(ref index, rdlength)),
         _ => throw new ArgumentException()
       };
 
       index += rdlength;
-      records[i] = new ResourceRecord(name, type, @class, ttl, rdata);
     }
 
     return records;

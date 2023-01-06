@@ -1,4 +1,5 @@
 ﻿using ModularDnsServer.Core.Dns;
+using ModularDnsServer.Core.Dns.ResourceRecords;
 using ModularDnsServer.Core.Interface;
 using System.Collections.Concurrent;
 using System.Net;
@@ -107,7 +108,7 @@ public class Server
     throw new NotImplementedException();
   }
 
-  private Message Response(Message message, ResourceRecord[] records)
+  private Message Response(Message message, IResourceRecord[] records)
   {
     return message with
     {
