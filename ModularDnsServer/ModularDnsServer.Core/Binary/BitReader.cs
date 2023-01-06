@@ -22,3 +22,11 @@ public static class BitReader
     return (uint)((first << 24) + (second << 16) + (third << 8) + last);
   }
 }
+
+public static class BitWriter
+{
+  public static byte[] ToBytes(this ushort value)
+  {
+    return new[] { (byte)(value >> 8), (byte)value };
+  }
+}

@@ -1,5 +1,7 @@
 ﻿using ModularDnsServer.Core.Binary;
+using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Text;
 
 namespace ModularDnsServer.Core.Dns.Parser;
@@ -99,4 +101,40 @@ public static class MessageParser
         index++;
         return string.Join('.', nameParts);
     }
+}
+
+
+
+public class MessageSerializer
+{
+  public static byte[] Serialize(Message message)
+  {
+    var buffer = new List<byte>();
+    SerializeHeader(buffer, message.Header);
+    SerializeQuestions(buffer);
+    SerializeResourceRecords(buffer);
+    SerializeResourceRecords(buffer);
+    SerializeResourceRecords(buffer);
+
+    return buffer.ToArray();
+  }
+
+  private static void SerializeHeader(List<byte> buffer, Header header)
+  {
+    buffer.AddRange(header.Id.ToBytes());
+    //buffer.Add((byte)header.MessageType);
+    var qr = (MessageType)((buffer[index] & 0b1000_0000) >> 7);
+    var opcode = (Opcode)((buffer[index] & 0b0111_1000) >> 3);
+    var aa = (buffer[index] & 0b0000_0100) > 0;
+    var tc = (buffer[index] & 0b0000_0010) > 0;
+    var rd = (buffer[index] & 0b0000_0001) > 0;
+    index++;
+    var ra = (buffer[index] & 0b1000_0000) > 0;
+    var rcode = (ResponseCode)(buffer[index] & 0b0000_1111);
+    index++;
+    var qdCount = buffer.ToUInt16(ref index);
+    var ancount = buffer.ToUInt16(ref index);
+    var nsCount = buffer.ToUInt16(ref index);
+    var arCount = buffer.ToUInt16(ref index);
+  }
 }
