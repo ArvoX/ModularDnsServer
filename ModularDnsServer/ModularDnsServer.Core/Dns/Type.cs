@@ -15,7 +15,7 @@ public enum Type : short
   [Obsolete("Use MX")]
   MF = 4,
   [Description("the canonical name for an ")]
-  CNAME = 5,
+  CName = 5,
   [Description("marks the start of a zone of authority")]
   SOA = 6,
   [Description("a mailbox domain name (EXPERIMENTAL")]
@@ -25,15 +25,15 @@ public enum Type : short
   [Description("a mail rename domain name (EXPERIMENTAL)")]
   MR = 9,
   [Description("a null RR (EXPERIMENTAL)")]
-  NULL = 10,
+  Null = 10,
   [Description("a well known service description")]
   WKS = 11,
   [Description("a domain name pointer")]
   PTR = 12,
   [Description("host information")]
-  HINFO = 13,
+  HInfo = 13,
   [Description("mailbox or mail list information")]
-  MINFO = 14,
+  MInfo = 14,
   [Description("mail exchange")]
   MX = 15,
   [Description("text strings")]

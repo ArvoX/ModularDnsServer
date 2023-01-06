@@ -16,7 +16,7 @@ public enum QType : short
   [Obsolete("Use MX")]
   MF = Type.MF,
   [Description("the canonical name for an ")]
-  CNAME = Type.CNAME,
+  CName = Type.CName,
   [Description("marks the start of a zone of authority")]
   SOA = Type.SOA,
   [Description("a mailbox domain name (EXPERIMENTAL")]
@@ -26,15 +26,15 @@ public enum QType : short
   [Description("a mail rename domain name (EXPERIMENTAL)")]
   MR = Type.MR,
   [Description("a null RR (EXPERIMENTAL)")]
-  NULL = Type.NULL,
+  Null = Type.Null,
   [Description("a well known service description")]
   WKS = Type.WKS,
   [Description("a domain name pointer")]
   PTR = Type.PTR,
   [Description("host information")]
-  HINFO = Type.HINFO,
+  HInfo = Type.HInfo,
   [Description("mailbox or mail list information")]
-  MINFO = Type.MINFO,
+  MInfo = Type.MInfo,
   [Description("mail exchange")]
   MX = Type.MX,
   [Description("text strings")]

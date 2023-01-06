@@ -6,40 +6,41 @@ using Type = ModularDnsServer.Core.Dns.Type;
 
 namespace ModularDnsServer.Core;
 
-internal class DnsCache : IDnsCache
+internal class DnsCache<T> : IDnsCache<T>
+  where T : IRecordData
 {
-  private ConcurrentDictionary<string, DomainCache> Cache = new();
+  private readonly ConcurrentDictionary<string, ResourceRecord<T>> Cache = new();
 
 
-  public ResourceRecord[] GetRecords(Message message)
+  public ResourceRecord<T>[] GetRecords(Message message)
   {
     if (message.Header.MessageType != MessageType.Query)
-      return Array.Empty<ResourceRecord>(); //TODO: Throw or NoResult?
+      return Array.Empty<ResourceRecord<T>>(); //TODO: Throw or NoResult?
 
     return message.Questions.SelectMany(GetRecordsFromCache).ToArray();
   }
 
-  private ImmutableList<ResourceRecord> GetRecordsFromCache(Question question)
+  private ImmutableList<ResourceRecord<T>> GetRecordsFromCache(Question question)
   {
     if (!Cache.TryGetValue(question.Domain, out DomainCache? cache))
-      return ImmutableList<ResourceRecord>.Empty;
+      return ImmutableList<ResourceRecord<T>>.Empty;
 
     return cache.GetRecords(question.Type);
   }
 }
 
-internal class DomainCache
-{
-  private ConcurrentDictionary<Type, ImmutableList<ResourceRecord>> Cache = new();
+//internal class DomainCache
+//{
+//  private ConcurrentDictionary<Type, ImmutableList<ResourceRecord<T>> Cache = new();
 
-  internal ImmutableList<ResourceRecord> GetRecords(QType type)
-  {
-    if (!Enum.IsDefined((Type)type))
-      return ImmutableList<ResourceRecord>.Empty;
+//  internal ImmutableList<ResourceRecord> GetRecords(QType type)
+//  {
+//    if (!Enum.IsDefined((Type)type))
+//      return ImmutableList<ResourceRecord>.Empty;
 
-    if (!Cache.TryGetValue((Type)type, out ImmutableList<ResourceRecord>? records))
-      return ImmutableList<ResourceRecord>.Empty;
+//    if (!Cache.TryGetValue((Type)type, out ImmutableList<ResourceRecord>? records))
+//      return ImmutableList<ResourceRecord>.Empty;
 
-    return records;
-  }
-}
+//    return records;
+//  }
+//}
