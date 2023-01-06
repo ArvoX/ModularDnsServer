@@ -68,3 +68,11 @@ public static class BitReader
     return result.ToArray();
   }
 }
+
+public static class BitWriter
+{
+  public static byte[] ToBytes(this ushort value)
+  {
+    return new[] { (byte)(value >> 8), (byte)value };
+  }
+}
