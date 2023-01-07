@@ -139,16 +139,18 @@ public class MessageSerializer
   public static byte[] Serialize(Message message)
   {
     var buffer = new List<byte>();
-    SerializeHeader(buffer, message.Header);
-    SerializeQuestions(buffer);
-    SerializeResourceRecords(buffer);
+    SerializeHeader(buffer, message.Header, message.Questions.Length, message.Answers.Length, message.Authorities.Length, message.AdditionalRecords.Length);
+    SerializeQuestions(buffer, message.Questions);
+    SerializeResourceRecords(buffer, message.Answers);
     SerializeResourceRecords(buffer);
     SerializeResourceRecords(buffer);
 
     return buffer.ToArray();
   }
 
-  private static void SerializeHeader(List<byte> buffer, Header header)
+  #region Header
+
+  private static void SerializeHeader(List<byte> buffer, Header header, int questions, int answers, int authorities, int additionalRecords)
   {
     buffer.AddRange(header.Id.ToBytes());
     //buffer.Add((byte)header.MessageType);
@@ -160,13 +162,67 @@ public class MessageSerializer
       flags += 0b0000_0010;
     if (header.RecursionDesired)
       flags += 0b0000_0001;
-    
-    var ra = (buffer[index] & 0b1000_0000) > 0;
-    var rcode = (ResponseCode)(buffer[index] & 0b0000_1111);
-    index++;
-    var qdCount = buffer.ToUInt16(ref index);
-    var ancount = buffer.ToUInt16(ref index);
-    var nsCount = buffer.ToUInt16(ref index);
-    var arCount = buffer.ToUInt16(ref index);
+    buffer.Add(flags);
+    flags = (byte)header.ResponseCode;
+    if (header.RecursionAvailable)
+      flags += 0b1000_0000;
+    buffer.Add(flags);
+    buffer.AddRange(((ushort)questions).ToBytes());
+    buffer.AddRange(((ushort)answers).ToBytes());
+    buffer.AddRange(((ushort)authorities).ToBytes());
+    buffer.AddRange(((ushort)additionalRecords).ToBytes());
+  }
+
+  #endregion
+
+  #region Questions
+
+  private static void SerializeQuestions(List<byte> buffer, Question[] questions)
+  {
+    foreach (var question in questions)
+    {
+      SerializeQuestion(buffer, question);
+    }
+  }
+
+  private static void SerializeQuestion(List<byte> buffer, Question question)
+  {
+    SerializeLabel(buffer, question.Domain);
+    buffer.AddRange(((ushort)question.Type).ToBytes());
+    buffer.AddRange(((ushort)question.Class).ToBytes());
+  }
+
+  #endregion
+
+  #region Records
+
+  private static void SerializeResourceRecords(List<byte> buffer, ResourceRecord[] records)
+  {
+    foreach(var record in records) 
+    {
+      SerializeResourceRecord(buffer, record);
+    }
+  }
+
+  private static void SerializeResourceRecord(List<byte> buffer, ResourceRecord record)
+  {
+    SerializeLabel(buffer, record.Domain);
+    buffer.AddRange(((ushort)record.Type).ToBytes());
+    buffer.AddRange(((ushort)record.Class).ToBytes());
+    buffer.AddRange(record.TimeToLive.ToBytes());
+  }
+
+  #endregion
+
+  private static void SerializeLabel(List<byte> buffer, string domain)
+  {
+    var domainParts = domain.Split('.');
+    foreach (var label in domainParts)
+    {
+      var bytes = Encoding.ASCII.GetBytes(label);
+      buffer.Add((byte)bytes.Length);
+      buffer.AddRange(bytes);
+    }
+    buffer.Add(0);
   }
 }
