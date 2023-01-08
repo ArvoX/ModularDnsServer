@@ -2,7 +2,7 @@
 
 namespace ModularDnsServer.Core.Dns;
 
-public enum Type : short
+public enum Type : ushort
 {
   [Description("a host address")]
   A = 1,
