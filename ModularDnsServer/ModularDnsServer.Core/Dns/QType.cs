@@ -2,7 +2,7 @@
 
 namespace ModularDnsServer.Core.Dns;
 
-public enum QType : short
+public enum QType : ushort
 {
   #region From Type
   [Description("a host address")]
