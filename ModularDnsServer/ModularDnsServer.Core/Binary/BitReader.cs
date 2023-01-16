@@ -75,8 +75,23 @@ public static class BitWriter
   {
     return new[] { (byte)(value >> 8), (byte)value };
   }
+  
+  public static byte[] ToBytes(this short value)
+  {
+    return new[] { (byte)(value >> 8), (byte)value };
+  }
+
   public static byte[] ToBytes(this uint value)
   {
     return new[] { (byte)(value >> 24), (byte)(value >> 16), (byte)(value >> 8), (byte)value };
+  }
+  public static byte[] ToBytes(this int value)
+  {
+    return new[] { (byte)(value >> 24), (byte)(value >> 16), (byte)(value >> 8), (byte)value };
+  }
+
+  public static byte[] ToBytes(this TimeSpan value)
+  {
+    return ((int)value.TotalSeconds).ToBytes();
   }
 }

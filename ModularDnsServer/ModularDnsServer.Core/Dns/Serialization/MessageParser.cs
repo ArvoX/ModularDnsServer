@@ -1,12 +1,8 @@
 ﻿using ModularDnsServer.Core.Binary;
-using System;
 using ModularDnsServer.Core.Dns.ResourceRecords;
-using System.ComponentModel;
-using System.Reflection;
 using System.Text;
-using System.Xml.Linq;
 
-namespace ModularDnsServer.Core.Dns.Parser;
+namespace ModularDnsServer.Core.Dns.Serialization;
 
 public static class MessageParser
 {
@@ -129,100 +125,5 @@ public static class MessageParser
 
     index++;
     return string.Join('.', nameParts);
-  }
-}
-
-
-
-public class MessageSerializer
-{
-  public static byte[] Serialize(Message message)
-  {
-    var buffer = new List<byte>();
-    SerializeHeader(buffer, message.Header, message.Questions.Length, message.Answers.Length, message.Authorities.Length, message.AdditionalRecords.Length);
-    SerializeQuestions(buffer, message.Questions);
-    SerializeResourceRecords(buffer, message.Answers);
-    SerializeResourceRecords(buffer);
-    SerializeResourceRecords(buffer);
-
-    return buffer.ToArray();
-  }
-
-  #region Header
-
-  private static void SerializeHeader(List<byte> buffer, Header header, int questions, int answers, int authorities, int additionalRecords)
-  {
-    buffer.AddRange(header.Id.ToBytes());
-    //buffer.Add((byte)header.MessageType);
-    var flags = (byte)((byte)header.MessageType << 7 +
-      (byte)header.Opcode << 3);
-    if (header.AuthoritativeAnswer)
-      flags += 0b0000_0100;
-    if (header.Truncation)
-      flags += 0b0000_0010;
-    if (header.RecursionDesired)
-      flags += 0b0000_0001;
-    buffer.Add(flags);
-    flags = (byte)header.ResponseCode;
-    if (header.RecursionAvailable)
-      flags += 0b1000_0000;
-    buffer.Add(flags);
-    buffer.AddRange(((ushort)questions).ToBytes());
-    buffer.AddRange(((ushort)answers).ToBytes());
-    buffer.AddRange(((ushort)authorities).ToBytes());
-    buffer.AddRange(((ushort)additionalRecords).ToBytes());
-  }
-
-  #endregion
-
-  #region Questions
-
-  private static void SerializeQuestions(List<byte> buffer, Question[] questions)
-  {
-    foreach (var question in questions)
-    {
-      SerializeQuestion(buffer, question);
-    }
-  }
-
-  private static void SerializeQuestion(List<byte> buffer, Question question)
-  {
-    SerializeLabel(buffer, question.Domain);
-    buffer.AddRange(((ushort)question.Type).ToBytes());
-    buffer.AddRange(((ushort)question.Class).ToBytes());
-  }
-
-  #endregion
-
-  #region Records
-
-  private static void SerializeResourceRecords(List<byte> buffer, ResourceRecord[] records)
-  {
-    foreach(var record in records) 
-    {
-      SerializeResourceRecord(buffer, record);
-    }
-  }
-
-  private static void SerializeResourceRecord(List<byte> buffer, ResourceRecord record)
-  {
-    SerializeLabel(buffer, record.Domain);
-    buffer.AddRange(((ushort)record.Type).ToBytes());
-    buffer.AddRange(((ushort)record.Class).ToBytes());
-    buffer.AddRange(record.TimeToLive.ToBytes());
-  }
-
-  #endregion
-
-  private static void SerializeLabel(List<byte> buffer, string domain)
-  {
-    var domainParts = domain.Split('.');
-    foreach (var label in domainParts)
-    {
-      var bytes = Encoding.ASCII.GetBytes(label);
-      buffer.Add((byte)bytes.Length);
-      buffer.AddRange(bytes);
-    }
-    buffer.Add(0);
   }
 }
