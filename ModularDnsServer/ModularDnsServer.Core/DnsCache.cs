@@ -7,7 +7,7 @@ using Type = ModularDnsServer.Core.Dns.Type;
 
 namespace ModularDnsServer.Core;
 
-internal class DnsCache : IDnsCache
+public class DnsCache : IDnsCache
 {
   private readonly ConcurrentDictionary<string, DomainCache> Cache = new();
 

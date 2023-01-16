@@ -1,14 +1,10 @@
-﻿using ModularDnsServer.Core.Dns;
-using ModularDnsServer.Core.Dns.Parser;
-using ModularDnsServer.Core.Dns.ResourceRecords;
-using ModularDnsServer.Core.Interface;
+﻿using ModularDnsServer.Core.Interface;
+using ModularDnsServer.Core.MessageHandling;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 
 namespace ModularDnsServer.Core;
-
-
 
 public class Server
 {
@@ -62,7 +58,7 @@ public class Server
       while (!cancellationToken.IsCancellationRequested)
       {
         var client = await TcpListener.AcceptTcpClientAsync(cancellationToken);
-        tasks.Add(Task.Run(() => Handle(client), cancellationToken));
+        tasks.Add(Task.Run(new TcpMessageHandler(client, cancellationToken, new MessageHandler(Cache, ActiveResolvers)).HandleAsync, cancellationToken));
       }
     }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current),
     Task.Factory.StartNew(async () =>
@@ -70,7 +66,7 @@ public class Server
       while (!cancellationToken.IsCancellationRequested)
       {
         var received = await UdpClient.ReceiveAsync();
-        tasks.Add(Task.Run(new UdpMessageHandler(received, new MessageHander()).HandleAsync, cancellationToken));
+        tasks.Add(Task.Run(new UdpMessageHandler(received, cancellationToken, new MessageHandler(Cache, ActiveResolvers)).HandleAsync, cancellationToken));
       }
     }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current),
     Task.Factory.StartNew(async () =>
@@ -83,66 +79,5 @@ public class Server
     );
 
     await Task.WhenAll(tasks);
-  }
-}
-
-public class MessageHander
-{ 
-  public async Task<Message> HandleResultAsync(Message message)
-  {
-    var records = Cache.GetRecords(message);
-    if (records.Any())
-      return Response(message, records);
-
-    //TODO async?
-    return Combine(ActiveResolvers.Select(async r => await r.ResolvAsync(message)));
-
-  }
-
-  private Message Combine(IEnumerable<Task<Message>> messages)
-  {
-    throw new NotImplementedException();
-  }
-
-  private Message Response(Message message, IResourceRecord[] records)
-  {
-    return message with
-    {
-      Header = message.Header with
-      {
-        MessageType = MessageType.Response
-      },
-      Answers = records
-    };
-  }
-}
-
-public class UdpMessageHandler
-{
-  private readonly byte[] Buffer;
-  private readonly IPEndPoint Client;
-  private readonly MessageHander MessageHander;
-  private readonly CancellationToken CancellationToken;
-
-  public UdpMessageHandler(UdpReceiveResult received, CancellationToken cancellationToken, MessageHander messageHander)
-  {
-    Buffer = received.Buffer;
-    Client = received.RemoteEndPoint;
-    MessageHander = messageHander;
-    CancellationToken = cancellationToken;
-  }
-
-  public async Task HandleAsync()
-  {
-    if (Buffer.Length > 512)
-      throw new Exception();
-
-    var message = MessageParser.ParseMessage(Buffer);
-    var result = await MessageHander.HandleResultAsync(message);
-    var buffer = MessageSerializer.Serialize(result);
-
-    using var client = new UdpClient();
-    client.Connect(Client);
-    await client.SendAsync(buffer, CancellationToken);
   }
 }
