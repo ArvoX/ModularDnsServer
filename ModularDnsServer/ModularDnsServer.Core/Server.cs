@@ -20,17 +20,8 @@ public class Server
     UdpClient = new UdpClient(configuration.UpdPort);
     TcpListener = new TcpListener(IPAddress.Any, configuration.TcpPort);
 
-    Cache = new DnsCache();
+    Cache = new DnsCache(resolvers);
 
-    PasiveResolvers = new List<IPasiveReslover>();
-    ActiveResolvers = new List<IActiveResolver>();
-    foreach (var resolver in resolvers)
-    {
-      if (resolver is IPasiveReslover pasiveReslover)
-        PasiveResolvers.Add(pasiveReslover);
-      else if (resolver is IActiveResolver activeResolver)
-        ActiveResolvers.Add(activeResolver);
-    }
   }
 
   //public Server(params IResolver[] resolvers) : this (ServerConfiguration.Default...
