@@ -27,7 +27,7 @@ public class MessageHandler
 
   public async Task<Message> HandleResultAsync(Message message)
   {
-    var records = Cache.GetRecords(message);
+    var records = await Cache.GetRecordsAsync(message);
     if (records.Any())
       return Response(message, records);
 

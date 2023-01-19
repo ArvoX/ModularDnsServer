@@ -27,7 +27,7 @@ public class DnsCache : IDnsCache
     }
   }
 
-  public IResourceRecord[] GetRecords(Message message)
+  public async Task<IResourceRecord[]> GetRecordsAsync(Message message)
   {
     if (message.Header.MessageType != MessageType.Query)
       return Array.Empty<IResourceRecord>(); //TODO: Throw or NoResult?
@@ -36,7 +36,7 @@ public class DnsCache : IDnsCache
     foreach (var question in message.Questions)
     {
       var cache = Cache.GetOrAdd(question.Domain, CacheInit);
-      records.AddRange(cache.GetRecords(question.Type, message));
+      records.AddRange(await cache.GetRecordsAsync(question.Type, message));
     }
 
     return records.ToArray();
@@ -58,32 +58,20 @@ internal class DomainCache
     ActiveResolvers = activeResolvers;
   }
 
-  internal ImmutableList<IResourceRecord> GetRecords(QType type, Message message)
+  internal async Task<ImmutableList<IResourceRecord>> GetRecordsAsync(QType type, Message message)
   {
     if (!Enum.IsDefined((Type)type))
       return ImmutableList<IResourceRecord>.Empty;
 
-    var records = Cache.GetOrAdd((Type)type, ResolveAsync, message);
+    var records = await Cache.GetOrAddAsync((Type)type, ResolveAsync, message);
 
     return records;
   }
 
   private async Task<ImmutableList<IResourceRecord>> ResolveAsync(Type type, Message message)
   {
-    var results = await Task.WhenAll(ActiveResolvers.Select(async ar => await ar.ResolvAsync(message)));
+    var results = await Task.WhenAll(ActiveResolvers.Select(async activeResolver => await activeResolver.ResolvAsync(message)));
 
-    return results;
-  }
-}
-
-public static class Foo
-{
-  public static async Task<TValue> GetOrAddAsync<TKey, TArg, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TArg, Task<TValue>> func, TArg arg)
-    where TKey : notnull
-  {
-    if (dictionary.TryGetValue(key, out var value))
-      return value;
-
-    return dictionary.GetOrAdd(key, await func(key, arg));
+    return results.SelectMany(message => message.Answers.Concat(message.Authorities).Concat(message.AdditionalRecords)).ToImmutableList();
   }
 }
