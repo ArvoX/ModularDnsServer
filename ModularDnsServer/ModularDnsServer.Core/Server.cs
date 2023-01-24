@@ -1,4 +1,5 @@
-﻿using ModularDnsServer.Core.Interface;
+﻿using ModularDnsServer.Core.Dns.Cache;
+using ModularDnsServer.Core.Interface;
 using ModularDnsServer.Core.MessageHandling;
 using System.Collections.Concurrent;
 using System.Net;
@@ -10,27 +11,19 @@ public class Server
 {
   private readonly UdpClient UdpClient;
   private readonly TcpListener TcpListener;
-  private readonly List<IPasiveReslover> PasiveResolvers;
-  private readonly List<IActiveResolver> ActiveResolvers;
-  private readonly DnsCache Cache;
+  private readonly IDnsCache Cache;
 
   //TODO use factory
-  public Server(ServerConfiguration configuration, params IResolver[] resolvers)
+  public Server(ServerConfiguration configuration, IDnsCache dnsCache)
   {
+    Cache = dnsCache;
     UdpClient = new UdpClient(configuration.UpdPort);
     TcpListener = new TcpListener(IPAddress.Any, configuration.TcpPort);
-
-    Cache = new DnsCache(resolvers);
-
   }
-
-  //public Server(params IResolver[] resolvers) : this (ServerConfiguration.Default...
-
-  //public Server(params Func<ResolverConfiguration, IResolver>[] factories)
 
   public async Task RunAsync(CancellationToken cancellationToken)
   {
-    await Task.WhenAll(PasiveResolvers.Select(async r => await r.InitCacheAsync(Cache)));
+    await Cache.Init(cancellationToken);
     if (cancellationToken.IsCancellationRequested)
       return;
 
@@ -49,7 +42,7 @@ public class Server
       while (!cancellationToken.IsCancellationRequested)
       {
         var client = await TcpListener.AcceptTcpClientAsync(cancellationToken);
-        tasks.Add(Task.Run(new TcpMessageHandler(client, cancellationToken, new MessageHandler(Cache, ActiveResolvers)).HandleAsync, cancellationToken));
+        tasks.Add(Task.Run(new TcpMessageHandler(client, cancellationToken, new MessageHandler(Cache)).HandleAsync, cancellationToken));
       }
     }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current),
     Task.Factory.StartNew(async () =>
@@ -57,7 +50,7 @@ public class Server
       while (!cancellationToken.IsCancellationRequested)
       {
         var received = await UdpClient.ReceiveAsync();
-        tasks.Add(Task.Run(new UdpMessageHandler(received, cancellationToken, new MessageHandler(Cache, ActiveResolvers)).HandleAsync, cancellationToken));
+        tasks.Add(Task.Run(new UdpMessageHandler(received, cancellationToken, new MessageHandler(Cache)).HandleAsync, cancellationToken));
       }
     }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current),
     Task.Factory.StartNew(async () =>

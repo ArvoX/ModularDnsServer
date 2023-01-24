@@ -1,9 +1,9 @@
 ﻿using ModularDnsServer.Core;
-using ModularDnsServer.Core.Dns;
+using ModularDnsServer.Core.Dns.Cache;
+using ModularDnsServer.Resolvers.StaticResolvers;
 using System.Net;
-using System.Net.Sockets;
-using System.Reflection.Emit;
 
 var conf = new ServerConfiguration();
+var cache = new NullCache(new ConfigurableUpstreamResolver(IPEndPoint.Parse("8.8.8.8:53")));
 
-await new Server(conf).RunAsync(CancellationToken.None);
+await new Server(conf, cache).RunAsync(CancellationToken.None);

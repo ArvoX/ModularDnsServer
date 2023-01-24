@@ -2,45 +2,33 @@
 using ModularDnsServer.Core.Dns.Serialization;
 using ModularDnsServer.Core.Dns.ResourceRecords;
 using ModularDnsServer.Core.Interface;
+using ModularDnsServer.Core.Dns.Cache;
 
 namespace ModularDnsServer.Core.MessageHandling;
 
 public class MessageHandler
 {
-  private readonly DnsCache Cache;
-  private readonly List<IActiveResolver> ActiveResolvers;
+  private readonly IDnsCache Cache;
 
-  public MessageHandler(DnsCache cache, List<IActiveResolver> activeResolvers)
+  public MessageHandler(IDnsCache cache)
   {
     Cache = cache;
-    ActiveResolvers = activeResolvers;
   }
 
-  public async Task<byte[]> ParseHandleSerialize(byte[] bufferIn)
+  public async Task<byte[]> ParseHandleSerialize(byte[] bufferIn, CancellationToken cancellationToken)
   {
     var message = MessageParser.ParseMessage(bufferIn);
-    var result = await HandleResultAsync(message);
+    var result = await HandleResultAsync(message, bufferIn, cancellationToken);
     var buffer = MessageSerializer.Serialize(result);
     return buffer;
   }
 
 
-  public async Task<Message> HandleResultAsync(Message message)
+  public async Task<Message> HandleResultAsync(Message message, ReadOnlyMemory<byte> orginalData, CancellationToken cancellationToken)
   {
-    var records = await Cache.GetRecordsAsync(message);
-    if (records.Any())
+    var records = await Cache.GetRecordsAsync(message, orginalData, cancellationToken);
+    //if (records.Any())
       return Response(message, records);
-
-    //TODO async?
-    return await CombineAsync(ActiveResolvers.Select(async r => await r.ResolvAsync(message)));
-
-  }
-
-  private async Task<Message> CombineAsync(IEnumerable<Task<Message>> messagesTasks)
-  {
-    var messages = await Task.WhenAll(messagesTasks);
-
-    throw new NotImplementedException();
   }
 
   private Message Response(Message message, IResourceRecord[] records)

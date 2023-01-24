@@ -23,7 +23,7 @@ public class UdpMessageHandler
     if (Buffer.Length > 512)
       throw new Exception();
 
-    byte[] buffer = await MessageHandler.ParseHandleSerialize(Buffer);
+    byte[] buffer = await MessageHandler.ParseHandleSerialize(Buffer, CancellationToken);
 
     using var client = new UdpClient();
     client.Connect(Client);

@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ModularDnsServer.Core\ModularDnsServer.Core.csproj" />
+    <ProjectReference Include="..\ModularDnsServer.Resolvers\ModularDnsServer.Resolvers.csproj" />
   </ItemGroup>
 
 </Project>

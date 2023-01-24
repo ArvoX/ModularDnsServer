@@ -36,7 +36,7 @@ public class TcpMessageHandler
     if (await stream.ReadAsync(buffer, CancellationToken) != buffer.Length)
       throw new Exception();
 
-    buffer = await MessageHandler.ParseHandleSerialize(buffer);
+    buffer = await MessageHandler.ParseHandleSerialize(buffer, CancellationToken);
 
     await stream.WriteAsync(((ushort)buffer.Length).ToBytes(), CancellationToken);
     await stream.WriteAsync(buffer, CancellationToken);
