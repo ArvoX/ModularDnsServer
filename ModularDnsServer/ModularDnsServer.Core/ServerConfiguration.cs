@@ -1,13 +1,15 @@
-﻿namespace ModularDnsServer.Core;
+﻿using System.Net;
+
+namespace ModularDnsServer.Core;
 
 public record class ServerConfiguration
 {
   public ServerConfiguration()
   {
-    UpdPort = 53;
-    TcpPort = 53;
+    UpdPort = new IPEndPoint(IPAddress.Any, 53);
+    TcpPort = new IPEndPoint(IPAddress.Any, 53);
   }
 
-  public int TcpPort { get; init; }
-  public int UpdPort { get; init; }
+  public IPEndPoint TcpPort { get; init; }
+  public IPEndPoint UpdPort { get; init; }
 }

@@ -37,31 +37,46 @@ public class Server
     BlockingCollection<Task> tasks = new();
 
     await Task.WhenAll(
-    Task.Factory.StartNew(async () =>
+      ListenTcp(tasks, cancellationToken),
+      ListenUdp(tasks, cancellationToken),
+      Cleanup(tasks, cancellationToken)
+    );
+
+    await Task.WhenAll(tasks);
+  }
+
+  private Task<Task> ListenTcp(BlockingCollection<Task> tasks, CancellationToken cancellationToken)
+  {
+    return Task.Factory.StartNew(async () =>
     {
       while (!cancellationToken.IsCancellationRequested)
       {
         var client = await TcpListener.AcceptTcpClientAsync(cancellationToken);
         tasks.Add(Task.Run(new TcpMessageHandler(client, cancellationToken, new MessageHandler(Cache)).HandleAsync, cancellationToken));
       }
-    }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current),
-    Task.Factory.StartNew(async () =>
+    }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
+  }
+
+  private Task<Task> ListenUdp(BlockingCollection<Task> tasks, CancellationToken cancellationToken)
+  {
+    return (Task<Task>)Task.Factory.StartNew(async () =>
     {
       while (!cancellationToken.IsCancellationRequested)
       {
         var received = await UdpClient.ReceiveAsync();
         tasks.Add(Task.Run(new UdpMessageHandler(received, cancellationToken, new MessageHandler(Cache)).HandleAsync, cancellationToken));
       }
-    }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current),
-    Task.Factory.StartNew(async () =>
+    }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
+  }
+
+  private static Task<Task> Cleanup(BlockingCollection<Task> tasks, CancellationToken cancellationToken)
+  {
+    return (Task<Task>)Task.Factory.StartNew(async () =>
       {
         while (!cancellationToken.IsCancellationRequested)
         {
           await tasks.Take(cancellationToken);
         }
-      }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current)
-    );
-
-    await Task.WhenAll(tasks);
+    }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
   }
 }
