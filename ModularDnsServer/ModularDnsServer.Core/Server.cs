@@ -18,7 +18,7 @@ public class Server
   {
     Cache = dnsCache;
     UdpClient = new UdpClient(configuration.UpdPort);
-    TcpListener = new TcpListener(IPAddress.Any, configuration.TcpPort);
+    TcpListener = new TcpListener(configuration.TcpPort);
   }
 
   public async Task RunAsync(CancellationToken cancellationToken)

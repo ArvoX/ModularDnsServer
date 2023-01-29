@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModularDnsServer", "Modular
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModularDnsServer.Core", "ModularDnsServer.Core\ModularDnsServer.Core.csproj", "{6F2D8E81-EB4A-453F-B3FE-29A27C4DAF9D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModularDnsServer.Resolvers", "ModularDnsServer.Resolvers\ModularDnsServer.Resolvers.csproj", "{95762AC2-E09B-4B65-AE2E-A84618CB30CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModularDnsServer.Resolvers", "ModularDnsServer.Resolvers\ModularDnsServer.Resolvers.csproj", "{95762AC2-E09B-4B65-AE2E-A84618CB30CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
