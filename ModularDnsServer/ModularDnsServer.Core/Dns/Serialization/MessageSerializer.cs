@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ModularDnsServer.Core.Dns.Serialization;
 
-public class MessageSerializer
+public static class MessageSerializer
 {
   public static byte[] Serialize(Message message)
   {
